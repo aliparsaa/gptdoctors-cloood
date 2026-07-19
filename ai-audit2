@@ -1,0 +1,27 @@
+<form id="auditForm">
+  <input type="text" id="url" placeholder="Enter URL">
+  <button type="submit">Analyze</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+document.getElementById("auditForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const url = document.getElementById("url").value;
+
+  const res = await fetch("https://seo.doctoraramis.ir/api/ai-audit", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ url })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("result").innerHTML =
+    "AI Score: " + data.score;
+});
+</script>

@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aramis GEO AI | پلتفرم دیده‌شدن در هوش مصنوعی</title>
+  <meta name="description" content="ببینید چرا ChatGPT و Gemini رقبای شما را پیشنهاد می‌دهند، نه برند شما را. با آرامیس جئو، دید خود را در هوش مصنوعی افزایش دهید.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Vazirmatn', 'Inter', 'system-ui', 'sans-serif'],
+            display: ['Vazirmatn', 'Inter', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'gradient-shift': 'gradientShift 18s ease infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+            'pulse-dot': 'pulseDot 2s ease-in-out infinite',
+          },
+          keyframes: {
+            gradientShift: {
+              '0%, 100%': { backgroundPosition: '0% 50%' },
+              '50%': { backgroundPosition: '100% 50%' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-20px)' },
+            },
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(30px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            pulseDot: {
+              '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+              '50%': { opacity: '0.5', transform: 'scale(1.5)' },
+            },
+          },
+          backgroundSize: {
+            '200%': '200% 200%',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Vazirmatn', 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #ededed;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .geo-title {
+      letter-spacing: -0.03em;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    /* الگوی شبکه‌ای پس‌زمینه */
+    .bg-grid-pattern {
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* انیمیشن‌های ظاهرشدن */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.15s; }
+    .reveal-delay-2 { transition-delay: 0.3s; }
+    .reveal-delay-3 { transition-delay: 0.45s; }
+
+    /* نوار پیشرفت متحرک */
+    .bar-fill {
+      width: 0;
+      transition: width 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .bar-fill.animate {
+      /* عرض از طریق JS تنظیم می‌شود */
+    }
+
+    /* نمودار ستونی سفارشی */
+    .chart-bar {
+      transition: width 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      width: 0;
+    }
+    .chart-bar.animate {
+      /* عرض از طریق JS تنظیم می‌شود */
+    }
+
+    /* افکت hover روی کارت‌ها */
+    .card-hover {
+      transition: transform 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+    }
+    .card-hover:hover {
+      transform: scale(1.03);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    /* لبه درخشان ناوبری */
+    .nav-scrolled {
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+
+    /* دکمه اصلی با سایه */
+    .btn-primary {
+      box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.3);
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .btn-primary:hover { transform: scale(1.05); }
+    .btn-primary:active { transform: scale(0.95); }
+
+    /* Toggle سوئیچ */
+    .toggle-track {
+      transition: background-color 0.3s ease;
+    }
+    .toggle-thumb {
+      transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+
+    /* منوی موبایل */
+    .mobile-menu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, opacity 0.3s ease;
+      opacity: 0;
+    }
+    .mobile-menu.open {
+      max-height: 400px;
+      opacity: 1;
+    }
+
+    /* انیمیشن لوگو چرخشی آرام */
+    @keyframes logoSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .logo-spin:hover {
+      animation: logoSpin 8s linear infinite;
+    }
+
+    /* تابش نوری روی کارت محبوب */
+    .popular-glow {
+      box-shadow: 0 0 60px -15px rgba(59, 130, 246, 0.2);
+    }
+
+    /* اسکرول‌بار سفارشی */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    /* Toast اعلان */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1a1a1a;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      z-index: 9999;
+      opacity: 0;
+      transition: transform 0.4s ease, opacity 0.4s ease;
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ذرات پس‌زمینه */
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0;
+      animation: particleFloat 8s ease-in-out infinite;
+    }
+    @keyframes particleFloat {
+      0% { opacity: 0; transform: translateY(0) scale(0); }
+      20% { opacity: 0.6; transform: translateY(-30px) scale(1); }
+      80% { opacity: 0.3; transform: translateY(-120px) scale(0.5); }
+      100% { opacity: 0; transform: translateY(-160px) scale(0); }
+    }
+  </style>
+</head>
+<body class="antialiased">
+
+  <!-- اعلان Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- ======== ناوبری ======== -->
+  <nav id="navbar" class="fixed top-0 z-50 w-full transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <!-- لوگو -->
+      <a href="#" class="flex items-center gap-2 logo-spin" style="transform-origin: center;">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <path d="M14 2L2 8v12l12 6 12-6V8L14 2z" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="14" cy="14" r="4" fill="#3b82f6"/>
+        </svg>
+        <span class="font-semibold text-white tracking-tight text-lg">Aramis GEO AI</span>
+      </a>
+
+      <!-- لینک‌های دسکتاپ -->
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#features" class="text-sm text-white/70 hover:text-white transition-colors">ویژگی‌ها</a>
+        <a href="#how-it-works" class="text-sm text-white/70 hover:text-white transition-colors">چطور کار می‌کند</a>
+        <a href="#geo-score" class="text-sm text-white/70 hover:text-white transition-colors">امتیاز GEO</a>
+        <a href="#pricing" class="text-sm text-white/70 hover:text-white transition-colors">قیمت‌ها</a>
+      </div>
+
+      <!-- دکمه‌های دسکتاپ -->
+      <div class="hidden md:flex items-center gap-4">
+        <a href="#" class="text-sm text-white/70 hover:text-white transition">ورود</a>
+        <button onclick="showToast('به زودی لینک دسترسی زودهنگام فعال می‌شود')" class="bg-blue-600 hover:bg-blue-500 text-white rounded-full px-5 py-2 text-sm font-medium transition transform active:scale-95">
+          دسترسی زودهنگام
+        </button>
+      </div>
+
+      <!-- دکمه هامبرگر موبایل -->
+      <button id="menuToggle" onclick="toggleMobileMenu()" class="md:hidden flex items-center p-1">
+        <svg id="menuIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white transition-transform duration-300">
+          <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- منوی موبایل -->
+    <div id="mobileMenu" class="mobile-menu md:hidden bg-black/95 backdrop-blur-xl border-t border-white/10">
+      <div class="px-6 py-4 flex flex-col gap-4">
+        <a href="#features" onclick="closeMobileMenu()" class="text-white/70 hover:text-white transition py-2">ویژگی‌ها</a>
+        <a href="#how-it-works" onclick="closeMobileMenu()" class="text-white/70 hover:text-white transition py-2">چطور کار می‌کند</a>
+        <a href="#geo-score" onclick="closeMobileMenu()" class="text-white/70 hover:text-white transition py-2">امتیاز GEO</a>
+        <a href="#pricing" onclick="closeMobileMenu()" class="text-white/70 hover:text-white transition py-2">قیمت‌ها</a>
+        <hr class="border-white/10">
+        <a href="#" class="text-white/70 hover:text-white transition py-2">ورود</a>
+        <button onclick="showToast('به زودی لینک دسترسی زودهنگام فعال می‌شود'); closeMobileMenu();" class="bg-blue-600 hover:bg-blue-500 text-white rounded-full px-5 py-2.5 text-sm font-medium transition text-center">
+          دسترسی زودهنگام
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="relative min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
+
+    <!-- ======== هیرو ======== -->
+    <section class="relative h-screen w-full flex items-center justify-center overflow-hidden bg-black">
+      <!-- پس‌زمینه گرادیان متحرک -->
+      <div class="absolute inset-0 bg-gradient-to-br from-indigo-950/30 via-black to-violet-950/20 bg-[length:200%_200%] animate-gradient-shift"></div>
+      <!-- الگوی شبکه‌ای -->
+      <div class="absolute inset-0 bg-grid-pattern opacity-20"></div>
+      <!-- ذرات شناور -->
+      <div id="heroParticles" class="absolute inset-0 pointer-events-none"></div>
+      <!-- سایه پایین -->
+      <div class="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#0a0a0a] to-transparent z-10"></div>
+
+      <div class="relative z-10 max-w-5xl mx-auto text-center px-6 mt-20 md:mt-32">
+        <!-- نشان بالایی -->
+        <div class="reveal inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/30 rounded-full px-4 py-1.5 text-sm text-blue-300 mb-6">
+          <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse-dot"></span>
+          GEO – بهینه‌سازی موتورهای مولد
+        </div>
+
+        <!-- تیتر اصلی -->
+        <h1 class="geo-title text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight">
+          <span class="block text-white reveal">چرا هوش مصنوعی</span>
+          <span class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-violet-400 mt-2 reveal reveal-delay-1">رقیب شما را پیشنهاد می‌دهد</span>
+          <span class="block text-white/80 mt-2 reveal reveal-delay-2">اما برند شما را نه؟</span>
+        </h1>
+
+        <!-- توضیح -->
+        <p class="reveal reveal-delay-2 max-w-2xl mx-auto mt-8 text-white/60 text-lg leading-relaxed">
+          آرامیس GEO AI اولین پلتفرم بررسی نحوه دیده شدن برند شما در ChatGPT، Gemini و Perplexity است. کشف کنید چرا نامرئی هستید – و دقیقاً چطور به گزینه پیشنهادی تبدیل شوید.
+        </p>
+
+        <!-- دکمه‌ها -->
+        <div class="reveal reveal-delay-3 flex flex-col sm:flex-row justify-center gap-4 mt-10">
+          <button onclick="document.getElementById('geo-score').scrollIntoView({behavior:'smooth'})" class="btn-primary bg-blue-600 hover:bg-blue-500 text-white rounded-full px-8 py-4 text-lg font-semibold">
+            بررسی دید در AI ←
+          </button>
+          <button onclick="showToast('ویدیوی دمو به زودی بارگذاری می‌شود')" class="bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full px-8 py-4 text-lg font-medium hover:bg-white/20 transition">
+            تماشای دمو
+          </button>
+        </div>
+
+        <!-- ورودی دمو -->
+        <div class="reveal reveal-delay-3 mt-12 max-w-md mx-auto bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-1 flex items-center gap-2">
+          <input
+            id="domainInput"
+            type="text"
+            placeholder="دامنه وب‌سایت خود را وارد کنید"
+            class="flex-1 bg-transparent text-white/80 placeholder-white/40 px-4 py-3 outline-none text-sm text-right"
+            dir="ltr"
+          >
+          <button onclick="handleDomainSubmit()" class="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-6 py-3 text-sm font-medium transition whitespace-nowrap">
+            تحلیل رایگان
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== امتیاز GEO ======== -->
+    <section id="geo-score" class="py-24 px-6 max-w-7xl mx-auto">
+      <div class="text-center mb-16 reveal">
+        <h2 class="text-4xl md:text-5xl font-bold geo-title mb-4">
+          برند شما چقدر در پاسخ‌های هوش مصنوعی دیده می‌شود؟
+        </h2>
+        <p class="text-white/60 max-w-2xl mx-auto">
+          ما صدها پرامپت را در مدل‌های برتر هوش مصنوعی اجرا می‌کنیم تا جایگاه واقعی شما را بسنجیم.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8 items-center">
+        <!-- سمت راست: نرخ اشاره -->
+        <div class="reveal space-y-5">
+          <h3 class="text-2xl font-semibold mb-6">نرخ اشاره در مدل‌های AI</h3>
+          <div class="space-y-4" id="mentionBars">
+            <!-- بارها از طریق JS رندر می‌شوند -->
+          </div>
+          <button onclick="showToast('حسابرسی کامل GEO به زودی فعال می‌شود')" class="mt-8 bg-blue-600 hover:bg-blue-500 text-white rounded-full px-6 py-3 text-sm font-medium transition transform active:scale-95">
+            اجرای حسابرسی کامل GEO ←
+          </button>
+        </div>
+
+        <!-- سمت چپ: نمودار ستونی -->
+        <div class="reveal reveal-delay-1 bg-[#111] border border-white/10 rounded-2xl p-6">
+          <h3 class="text-xl font-semibold mb-6">سهم برندها در پاسخ‌های هوش مصنوعی</h3>
+          <div class="space-y-5" id="brandChart">
+            <!-- ستون‌ها از طریق JS رندر می‌شوند -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== نحوه کارکرد ======== -->
+    <section id="how-it-works" class="py-24 px-6 max-w-7xl mx-auto">
+      <h2 class="text-4xl md:text-5xl font-bold geo-title text-center mb-16 reveal">
+        آرامیس چطور کار می‌کند؟
+      </h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- مرحله ۱ -->
+        <div class="reveal card-hover bg-[#111] border border-white/10 rounded-2xl p-8 text-center">
+          <div class="flex justify-center mb-4">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+          <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 text-sm font-bold mb-3">۱</div>
+          <h3 class="text-xl font-semibold mb-2">وب‌سایت خود را متصل کنید</h3>
+          <p class="text-white/60">دامنه خود را وارد کنید و به agent هوش مصنوعی ما اجازه دهید محتوای شما را بررسی کند.</p>
+        </div>
+        <!-- مرحله ۲ -->
+        <div class="reveal reveal-delay-1 card-hover bg-[#111] border border-white/10 rounded-2xl p-8 text-center">
+          <div class="flex justify-center mb-4">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 text-sm font-bold mb-3">۲</div>
+          <h3 class="text-xl font-semibold mb-2">AI بیش از ۲۰۰ پرامپت را بررسی می‌کند</h3>
+          <p class="text-white/60">ما پرسش‌های واقعی کاربران را در ChatGPT، Gemini، Claude و Perplexity شبیه‌سازی می‌کنیم.</p>
+        </div>
+        <!-- مرحله ۳ -->
+        <div class="reveal reveal-delay-2 card-hover bg-[#111] border border-white/10 rounded-2xl p-8 text-center">
+          <div class="flex justify-center mb-4">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+          <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 text-sm font-bold mb-3">۳</div>
+          <h3 class="text-xl font-semibold mb-2">نقشه راه عملی دریافت کنید</h3>
+          <p class="text-white/60">فهرستی اولویت‌بندی‌شده از شکاف‌های محتوایی و اعتباری برای بهبود دریافت می‌کنید.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== ویژگی‌ها ======== -->
+    <section id="features" class="py-24 px-6 max-w-7xl mx-auto">
+      <h2 class="text-4xl md:text-5xl font-bold geo-title text-center mb-16 reveal">
+        هر آنچه برای پیروزی در جستجوی هوش مصنوعی نیاز دارید
+      </h2>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- ویژگی ۱ -->
+        <div class="reveal card-hover bg-[#111] border border-white/10 rounded-2xl p-6 hover:bg-[#1a1a1a]">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">داشبورد امتیاز GEO</h3>
+          <p class="text-white/60 text-sm">امتیاز دید در مدل‌های زبانی بزرگ به‌صورت لحظه‌ای و به‌روزرسانی روزانه.</p>
+        </div>
+        <!-- ویژگی ۲ -->
+        <div class="reveal reveal-delay-1 card-hover bg-[#111] border border-white/10 rounded-2xl p-6 hover:bg-[#1a1a1a]">
+          <div class="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">پایشگر اشاره در AI</h3>
+          <p class="text-white/60 text-sm">ببینید دقیقاً چرا هوش مصنوعی رقبا را انتخاب می‌کند – کمبود محتوا، ضعف اعتبار.</p>
+        </div>
+        <!-- ویژگی ۳ -->
+        <div class="reveal reveal-delay-2 card-hover bg-[#111] border border-white/10 rounded-2xl p-6 hover:bg-[#1a1a1a]">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">موتور فرصت‌های محتوایی</h3>
+          <p class="text-white/60 text-sm">موضوعات پیشنهادی مبتنی بر هوش مصنوعی که رتبه GEO شما را بهبود می‌بخشد.</p>
+        </div>
+        <!-- ویژگی ۴ -->
+        <div class="reveal reveal-delay-3 card-hover bg-[#111] border border-white/10 rounded-2xl p-6 hover:bg-[#1a1a1a]">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center mb-4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9H4.5a2.5 2.5 0 010-5C7 4 8 8 12 8s5-4 7.5-4a2.5 2.5 0 010 5H18"/>
+              <path d="M18 9v10a2 2 0 01-2 2H8a2 2 0 01-2-2V9"/>
+              <path d="M12 4V2"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">اطلاعات رقابتی</h3>
+          <p class="text-white/60 text-sm">کلمات کلیدی و بک‌لینک‌هایی را کشف کنید که به رقبا مزیت در AI می‌دهند.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== قیمت‌گذاری ======== -->
+    <section id="pricing" class="py-24 px-6 max-w-7xl mx-auto">
+      <h2 class="text-4xl md:text-5xl font-bold geo-title text-center mb-4 reveal">
+        قیمت‌گذاری ساده و شفاف
+      </h2>
+      <p class="text-center text-white/60 mb-8 reveal reveal-delay-1">
+        رایگان شروع کنید، وقتی آماده تسلط بر دید هوش مصنوعی بودید ارتقا دهید.
+      </p>
+
+      <!-- سوئیچ ماهانه/سالانه -->
+      <div class="flex justify-center items-center gap-3 mb-12 reveal reveal-delay-1">
+        <span id="labelMonthly" class="text-white font-medium">ماهانه</span>
+        <button id="pricingToggle" onclick="togglePricing()" class="toggle-track w-12 h-6 rounded-full p-1 bg-white/20 relative">
+          <div id="toggleThumb" class="toggle-thumb w-4 h-4 bg-white rounded-full" style="transform: translateX(0);"></div>
+        </button>
+        <span id="labelYearly" class="text-white/50">سالانه <span class="text-green-400 text-xs">۲۰٪ تخفیف</span></span>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- پلن استارتر -->
+        <div class="reveal card-hover bg-[#111] border border-white/10 rounded-2xl p-8 flex flex-col">
+          <h3 class="text-xl font-semibold mb-1">استارتر</h3>
+          <p class="text-white/50 text-sm mb-6">مناسب کسب‌وکارهای کوچک برای شروع با GEO.</p>
+          <div class="text-4xl font-bold mb-6">
+            <span id="priceStarter">۱۲۰</span>
+            <span class="text-lg text-white/50 font-normal"> هزار تومان / ماه</span>
+          </div>
+          <ul class="space-y-3 mb-8 flex-1">
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              ۱ وب‌سایت
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              اسکن هفتگی GEO
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              گزارش دید در AI
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              ۲۰ پیشنهاد محتوا
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              پشتیبانی ایمیل
+            </li>
+          </ul>
+          <button onclick="showToast('ثبت‌نام پلن استارتر به زودی فعال می‌شود')" class="w-full py-3 rounded-xl font-medium transition bg-white/10 hover:bg-white/20 text-white">
+            شروع کنید
+          </button>
+        </div>
+
+        <!-- پلن حرفه‌ای (محبوب) -->
+        <div class="reveal reveal-delay-1 card-hover popular-glow bg-[#111] border border-blue-500/50 rounded-2xl p-8 flex flex-col relative">
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs px-4 py-1 rounded-full font-medium">
+            محبوب‌ترین
+          </span>
+          <h3 class="text-xl font-semibold mb-1">حرفه‌ای</h3>
+          <p class="text-white/50 text-sm mb-6">برای تیم‌های در حال رشد که به بینش عمیق‌تر نیاز دارند.</p>
+          <div class="text-4xl font-bold mb-6">
+            <span id="pricePro">۲۹۰</span>
+            <span class="text-lg text-white/50 font-normal"> هزار تومان / ماه</span>
+          </div>
+          <ul class="space-y-3 mb-8 flex-1">
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              تا ۵ وب‌سایت
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              اسکن روزانه
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              ردیابی رقبا
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              دسترسی API
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              پشتیبانی ویژه
+            </li>
+          </ul>
+          <button onclick="showToast('ثبت‌نام پلن حرفه‌ای به زودی فعال می‌شود')" class="w-full py-3 rounded-xl font-medium transition bg-blue-600 hover:bg-blue-500 text-white">
+            شروع کنید
+          </button>
+        </div>
+
+        <!-- پلن سازمانی -->
+        <div class="reveal reveal-delay-2 card-hover bg-[#111] border border-white/10 rounded-2xl p-8 flex flex-col">
+          <h3 class="text-xl font-semibold mb-1">سازمانی</h3>
+          <p class="text-white/50 text-sm mb-6">مقیاس نامحدود، یکپارچه‌سازی سفارشی، پشتیبانی اختصاصی.</p>
+          <div class="text-4xl font-bold mb-6">سفارشی</div>
+          <ul class="space-y-3 mb-8 flex-1">
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              وب‌سایت نامحدود
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              پایش لحظه‌ای
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              گزارش‌های white-label
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              مدیر حساب اختصاصی
+            </li>
+            <li class="flex items-center gap-2 text-white/70 text-sm">
+              <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              یکپارچه‌سازی سفارشی
+            </li>
+          </ul>
+          <button onclick="showToast('فرم تماس با فروش به زودی فعال می‌شود')" class="w-full py-3 rounded-xl font-medium transition bg-white/10 hover:bg-white/20 text-white">
+            تماس با فروش
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== اعتبار اجتماعی ======== -->
+    <section class="py-24 px-6 max-w-7xl mx-auto">
+      <!-- لوگوها -->
+      <div class="text-center mb-12 reveal">
+        <p class="text-white/50 text-sm uppercase tracking-wider mb-8">مورد اعتماد استارتاپ‌های پیشرو</p>
+        <div class="flex flex-wrap justify-center gap-8 md:gap-12">
+          <span class="text-white/30 font-semibold text-lg hover:text-white/50 transition">آکمه</span>
+          <span class="text-white/30 font-semibold text-lg hover:text-white/50 transition">مدتک</span>
+          <span class="text-white/30 font-semibold text-lg hover:text-white/50 transition">اسکیل ای‌آی</span>
+          <span class="text-white/30 font-semibold text-lg hover:text-white/50 transition">دیتافلو</span>
+          <span class="text-white/30 font-semibold text-lg hover:text-white/50 transition">نکسوس</span>
+        </div>
+      </div>
+
+      <!-- نظر مشتری -->
+      <div class="reveal max-w-2xl mx-auto bg-[#111] border border-white/10 rounded-2xl p-8 md:p-12 text-center">
+        <svg class="w-8 h-8 mx-auto mb-6 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C9.591 11.69 11 13.166 11 15c0 1.933-1.567 3.5-3.5 3.5-1.186 0-2.282-.599-2.917-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C19.591 11.69 21 13.166 21 15c0 1.933-1.567 3.5-3.5 3.5-1.186 0-2.282-.599-2.917-1.179z"/>
+        </svg>
+        <p class="text-xl md:text-2xl text-white/90 leading-relaxed mb-6">
+          «آرامیس به ما کمک کرد در ۶ هفته از ۲٪ به ۴۷٪ نرخ اشاره در هوش مصنوعی برسیم. ترافیک ارجاعی ما از ChatGPT سه برابر شد.»
+        </p>
+        <div class="flex items-center justify-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">س چ</div>
+          <div class="text-right">
+            <p class="font-medium">سارا چن</p>
+            <p class="text-sm text-white/50">مدیر رشد، مدتک</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== CTA نهایی ======== -->
+    <section class="py-24 px-6 max-w-4xl mx-auto text-center reveal">
+      <div class="relative bg-gradient-to-br from-blue-600/10 to-violet-600/10 border border-blue-500/20 rounded-3xl p-12 md:p-16 overflow-hidden">
+        <!-- دایره‌های تزئینی -->
+        <div class="absolute -top-20 -right-20 w-60 h-60 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-20 -left-20 w-60 h-60 bg-violet-500/5 rounded-full blur-3xl"></div>
+
+        <h2 class="text-3xl md:text-4xl font-bold geo-title mb-4 relative z-10">
+          آماده‌اید در هوش مصنوعی دیده شوید؟
+        </h2>
+        <p class="text-white/60 max-w-lg mx-auto mb-8 relative z-10">
+          همین الان بررسی رایگان دید GEO خود را شروع کنید و کشف کنید چقدر ترافیک از دست می‌دهید.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
+          <button onclick="document.getElementById('domainInput').focus(); window.scrollTo({top:0,behavior:'smooth'})" class="btn-primary bg-blue-600 hover:bg-blue-500 text-white rounded-full px-8 py-4 text-lg font-semibold">
+            شروع بررسی رایگان
+          </button>
+          <button onclick="showToast('صفحه مستندات به زودی منتشر می‌شود')" class="bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full px-8 py-4 text-lg font-medium hover:bg-white/20 transition">
+            مطالعه مستندات
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======== فوتر ======== -->
+  <footer class="border-t border-white/10 py-12 px-6 max-w-7xl mx-auto">
+    <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-8">
+      <div>
+        <h4 class="text-white font-semibold mb-4">محصول</h4>
+        <ul class="space-y-2 text-white/50 text-sm">
+          <li><a href="#geo-score" class="hover:text-white transition">امتیاز GEO</a></li>
+          <li><a href="#features" class="hover:text-white transition">پایش اشاره در AI</a></li>
+          <li><a href="#features" class="hover:text-white transition">موتور محتوا</a></li>
+          <li><a href="#features" class="hover:text-white transition">اطلاعات رقبا</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-semibold mb-4">منابع</h4>
+        <ul class="space-y-2 text-white/50 text-sm">
+          <li><a href="#" onclick="showToast('وبلاگ به زودی منتشر می‌شود'); return false;" class="hover:text-white transition">وبلاگ</a></li>
+          <li><a href="#" onclick="showToast('راهنمای GEO به زودی منتشر می‌شود'); return false;" class="hover:text-white transition">راهنمای GEO</a></li>
+          <li><a href="#" onclick="showToast('مستندات API به زودی منتشر می‌شود'); return false;" class="hover:text-white transition">مستندات API</a></li>
+          <li><a href="#" onclick="showToast('مطالعات موردی به زودی منتشر می‌شود'); return false;" class="hover:text-white transition">مطالعات موردی</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-semibold mb-4">شرکت</h4>
+        <ul class="space-y-2 text-white/50 text-sm">
+          <li><a href="#" onclick="showToast('صفحه درباره ما به زودی منتشر می‌شود'); return false;" class="hover:text-white transition">درباره ما</a></li>
+          <li><a href="#" onclick="showToast('صفحه فرصت‌های شغلی به زودی منتشر می‌شود'); return false;" class="hover:text-white transition">فرصت‌های شغلی</a></li>
+          <li><a href="#" onclick="showToast('صفحه تماس به زودی منتشر می‌شود'); return false;" class="hover:text-white transition">تماس با ما</a></li>
+          <li><a href="#" onclick="showToast('صفحه همکاران به زودی منتشر می‌شود'); return false;" class="hover:text-white transition">همکاران</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-semibold mb-4">قوانین</h4>
+        <ul class="space-y-2 text-white/50 text-sm">
+          <li><a href="#" onclick="showToast('صفحه حریم خصوصی به زودی منتشر می‌شود'); return false;" class="hover:text-white transition">حریم خصوصی</a></li>
+          <li><a href="#" onclick="showToast('صفحه شرایط استفاده به زودی منتشر می‌شود'); return false;" class="hover:text-white transition">شرایط استفاده</a></li>
+          <li><a href="#" onclick="showToast('صفحه کوکی‌ها به زودی منتشر می‌شود'); return false;" class="hover:text-white transition">کوکی‌ها</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="mt-12 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-white/30 text-sm">
+      <span>© ۲۰۲۵ آرامیس GEO AI. کلیه حقوق محفوظ است.</span>
+      <div class="flex items-center gap-2">
+        <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+          <path d="M14 2L2 8v12l12 6 12-6V8L14 2z" stroke="#ffffff50" stroke-width="2"/>
+          <circle cx="14" cy="14" r="4" fill="#ffffff50"/>
+        </svg>
+        <span>Aramis GEO AI</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ========== داده‌ها ==========
+
+    // نرخ اشاره مدل‌ها
+    const mentionData = [
+      { model: 'ChatGPT', rate: 18, color: 'from-blue-500 to-blue-400' },
+      { model: 'Gemini', rate: 42, color: 'from-violet-500 to-violet-400' },
+      { model: 'Claude', rate: 31, color: 'from-indigo-500 to-indigo-400' },
+      { model: 'Perplexity', rate: 27, color: 'from-cyan-500 to-cyan-400' },
+    ];
+
+    // سهم برندها
+    const brandData = [
+      { name: 'برند شما', value: 2, fill: '#3b82f6' },
+      { name: 'رقیب الف', value: 65, fill: '#8b5cf6' },
+      { name: 'رقیب ب', value: 28, fill: '#6366f1' },
+    ];
+
+    // ========== رندر نوارهای نرخ اشاره ==========
+    function renderMentionBars() {
+      const container = document.getElementById('mentionBars');
+      container.innerHTML = mentionData.map(item => `
+        <div class="flex items-center justify-between">
+          <span class="text-white/80 text-sm w-24 text-left">${item.model}</span>
+          <div class="flex items-center gap-3 flex-1 mr-4">
+            <div class="w-full max-w-[180px] h-2.5 bg-white/10 rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-gradient-to-l ${item.color} rounded-full" data-width="${item.rate}%"></div>
+            </div>
+            <span class="text-sm text-white/60 w-10 text-left">${item.rate}%</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ========== رندر نمودار ستونی ==========
+    function renderBrandChart() {
+      const container = document.getElementById('brandChart');
+      container.innerHTML = brandData.map(item => `
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm text-white/70">${item.name}</span>
+            <span class="text-sm font-medium" style="color: ${item.fill}">${item.value}%</span>
+          </div>
+          <div class="w-full h-8 bg-white/5 rounded-lg overflow-hidden">
+            <div class="chart-bar h-full rounded-lg flex items-center justify-end px-3" data-width="${item.value}%" style="background: ${item.fill}; opacity: 0.85;">
+              ${item.value > 10 ? `<span class="text-xs text-white font-medium">${item.value}%</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ========== انیمیشن‌های اسکرول (IntersectionObserver) ==========
+    function setupScrollAnimations() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // نمایش المان
+            entry.target.classList.add('visible');
+
+            // انیمیشن نوارهای نرخ اشاره
+            entry.target.querySelectorAll('.bar-fill').forEach(bar => {
+              setTimeout(() => {
+                bar.style.width = bar.dataset.width;
+              }, 200);
+            });
+
+            // انیمیشن ستون‌های نمودار
+            entry.target.querySelectorAll('.chart-bar').forEach((bar, i) => {
+              setTimeout(() => {
+                bar.style.width = bar.dataset.width;
+              }, 200 + i * 150);
+            });
+
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    }
+
+    // ========== ناوبری اسکرول ==========
+    function setupNavbar() {
+      const navbar = document.getElementById('navbar');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 20) {
+          navbar.classList.add('nav-scrolled');
+        } else {
+          navbar.classList.remove('nav-scrolled');
+        }
+      }, { passive: true });
+    }
+
+    // ========== منوی موبایل ==========
+    let mobileMenuOpen = false;
+    function toggleMobileMenu() {
+      mobileMenuOpen = !mobileMenuOpen;
+      const menu = document.getElementById('mobileMenu');
+      const icon = document.getElementById('menuIcon');
+      if (mobileMenuOpen) {
+        menu.classList.add('open');
+        icon.style.transform = 'rotate(90deg)';
+      } else {
+        menu.classList.remove('open');
+        icon.style.transform = 'rotate(0deg)';
+      }
+    }
+    function closeMobileMenu() {
+      mobileMenuOpen = false;
+      document.getElementById('mobileMenu').classList.remove('open');
+      document.getElementById('menuIcon').style.transform = 'rotate(0deg)';
+    }
+
+    // ========== سوئیچ قیمت‌گذاری ==========
+    let isYearly = false;
+    function togglePricing() {
+      isYearly = !isYearly;
+      const thumb = document.getElementById('toggleThumb');
+      const track = document.getElementById('pricingToggle');
+      const labelM = document.getElementById('labelMonthly');
+      const labelY = document.getElementById('labelYearly');
+      const priceS = document.getElementById('priceStarter');
+      const priceP = document.getElementById('pricePro');
+
+      if (isYearly) {
+        thumb.style.transform = 'translateX(24px)';
+        track.classList.remove('bg-white/20');
+        track.classList.add('bg-blue-600');
+        labelM.classList.remove('text-white');
+        labelM.classList.add('text-white/50');
+        labelY.classList.remove('text-white/50');
+        labelY.classList.add('text-white');
+        priceS.textContent = '۹۶';
+        priceP.textContent = '۲۳۲';
+      } else {
+        thumb.style.transform = 'translateX(0)';
+        track.classList.remove('bg-blue-600');
+        track.classList.add('bg-white/20');
+        labelM.classList.remove('text-white/50');
+        labelM.classList.add('text-white');
+        labelY.classList.remove('text-white');
+        labelY.classList.add('text-white/50');
+        priceS.textContent = '۱۲۰';
+        priceP.textContent = '۲۹۰';
+      }
+    }
+
+    // ========== Toast اعلان ==========
+    let toastTimeout = null;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // ========== ارسال دامنه ==========
+    function handleDomainSubmit() {
+      const input = document.getElementById('domainInput');
+      const domain = input.value.trim();
+      if (!domain) {
+        showToast('لطفاً دامنه وب‌سایت خود را وارد کنید');
+        input.focus();
+        return;
+      }
+      // اعتبارسنجی ساده دامنه
+      const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\.[a-zA-Z]{2,})+$/;
+      if (!domainRegex.test(domain)) {
+        showToast('فرمت دامنه نامعتبر است. مثال: example.com');
+        input.focus();
+        return;
+      }
+      showToast(`در حال تحلیل ${domain} ... نتایج به زودی آماده می‌شود`);
+    }
+
+    // ========== ذرات پس‌زمینه هیرو ==========
+    function createHeroParticles() {
+      const container = document.getElementById('heroParticles');
+      if (!container) return;
+      const colors = ['#3b82f6', '#8b5cf6', '#6366f1', '#06b6d4'];
+      for (let i = 0; i < 20; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        const size = Math.random() * 4 + 2;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.cssText = `
+          width: ${size}px;
+          height: ${size}px;
+          background: ${color};
+          left: ${Math.random() * 100}%;
+          top: ${Math.random() * 100}%;
+          animation-delay: ${Math.random() * 8}s;
+          animation-duration: ${6 + Math.random() * 6}s;
+        `;
+        container.appendChild(particle);
+      }
+    }
+
+    // ========== انیمیشن ورودی اولیه هیرو ==========
+    function animateHeroEntrance() {
+      const reveals = document.querySelectorAll('section:first-of-type .reveal');
+      reveals.forEach((el, i) => {
+        setTimeout(() => {
+          el.classList.add('visible');
+        }, 200 + i * 150);
+      });
+    }
+
+    // ========== حلقه انیمیشن شماره‌ها (افکت شمارش) ==========
+    function animateCounters() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // شمارش اعداد در نمودار
+            const bars = entry.target.querySelectorAll('.chart-bar');
+            bars.forEach(bar => {
+              const target = parseInt(bar.dataset.width);
+              const numSpan = bar.querySelector('span');
+              if (!numSpan) return;
+              let current = 0;
+              const step = Math.max(1, Math.floor(target / 30));
+              const interval = setInterval(() => {
+                current += step;
+                if (current >= target) {
+                  current = target;
+                  clearInterval(interval);
+                }
+                numSpan.textContent = current + '%';
+              }, 30);
+            });
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.3 });
+
+      const brandChart = document.getElementById('brandChart');
+      if (brandChart) observer.observe(brandChart);
+    }
+
+    // ========== مقداردهی اولیه ==========
+    document.addEventListener('DOMContentLoaded', () => {
+      renderMentionBars();
+      renderBrandChart();
+      setupScrollAnimations();
+      setupNavbar();
+      createHeroParticles();
+      animateHeroEntrance();
+      animateCounters();
+
+      // ارسال دامنه با Enter
+      document.getElementById('domainInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleDomainSubmit();
+      });
+    });
+
+    // ========== کاهش انیمیشن برای کاربران حساس ==========
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('.particle').forEach(p => p.remove());
+      document.querySelectorAll('.reveal').forEach(el => {
+        el.style.transition = 'none';
+        el.classList.add('visible');
+      });
+    }
+  </script>
+</body>
+</html>
